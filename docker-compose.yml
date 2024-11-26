@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  ratelimiter:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"  # HTTP
+      - "9090:9090"  # gRPC
+    command: 
+      - "--redis-addr=redis:6379"
+      - "--http-addr=:8080"
+      - "--grpc-addr=:9090"
+    environment:
+      # Strict limits for clear testing
+      - RATE_LIMIT=2        # Only 2 requests
+      - RATE_WINDOW=5s     # Per 5 seconds
+      - BURST_SIZE=3       # Allow burst of 3
+      - DEBUG=true         # Enable debug logging
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - drl-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - drl-network
+
+  loadtest:
+    build: 
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      - ./api:/app/api:ro  # Mount proto files for gRPC testing
+    depends_on:
+      - ratelimiter
+    networks:
+      - drl-network
+
+volumes:
+  redis-data:
+
+networks:
+  drl-network:
+    driver: bridge

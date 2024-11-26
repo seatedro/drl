@@ -1,0 +1,17 @@
+# Dockerfile.test
+FROM golang:1.21-alpine
+
+RUN go install github.com/rakyll/hey@latest
+
+RUN go install github.com/bojand/ghz/cmd/ghz@latest
+
+# Add shell and other tools
+RUN apk add --no-cache bash curl jq
+
+WORKDIR /app
+
+COPY api/v1/drl.proto /protos/
+COPY test.sh .
+RUN chmod +x test.sh
+
+ENTRYPOINT ["./test.sh"]

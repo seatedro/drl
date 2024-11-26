@@ -1,0 +1,35 @@
+// api/v1/ratelimit.proto
+syntax = "proto3";
+
+package drl.v1;
+
+option go_package = "github.com/seatedro/drl/api/v1;drlv1";
+
+service RateLimiter {
+    // Allow checks if a request should be allowed
+    rpc Allow(AllowRequest) returns (AllowResponse) {}
+    
+    // Reset resets the rate limit for a key
+    rpc Reset(ResetRequest) returns (ResetResponse) {}
+}
+
+message AllowRequest {
+    string key = 1;
+    string namespace = 2; // Optional namespace for grouping
+}
+
+message AllowResponse {
+    bool allowed = 1;
+    int32 remaining = 2;
+    int64 reset_after_sec = 3;
+    int64 retry_after_sec = 4; // Only set when allowed is false
+}
+
+message ResetRequest {
+    string key = 1;
+    string namespace = 2;
+}
+
+message ResetResponse {
+    bool success = 1;
+}
