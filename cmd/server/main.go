@@ -32,6 +32,13 @@ func getEnvInt(key string, defaultVal int) int {
 	return defaultVal
 }
 
+func getEnvString(key string, defaultVal string) string {
+	if val, exists := os.LookupEnv(key); exists {
+		return val
+	}
+	return defaultVal
+}
+
 func getEnvDuration(key string, defaultVal time.Duration) time.Duration {
 	if val, exists := os.LookupEnv(key); exists {
 		if duration, err := time.ParseDuration(val); err == nil {
@@ -45,10 +52,10 @@ func main() {
 	// Parse flags
 	httpAddr := flag.String("http-addr", ":8080", "HTTP server address")
 	grpcAddr := flag.String("grpc-addr", ":9090", "gRPC server address")
-	redisAddr := flag.String("redis-addr", "localhost:6379", "Redis address")
 	flag.Parse()
 
 	// Get configuration from environment
+	redisAddr := getEnvString("REDIS_URL", "localhost:6379")
 	rate := getEnvInt("RATE_LIMIT", 100)
 	window := getEnvDuration("RATE_WINDOW", time.Minute)
 	burstSize := getEnvInt("BURST_SIZE", 150)
@@ -58,7 +65,7 @@ func main() {
 
 	// Create Redis store
 	store, err := redis.NewStore(redis.Options{
-		Addresses: []string{*redisAddr},
+		Addresses: []string{redisAddr},
 	})
 	if err != nil {
 		log.Fatalf("Failed to create Redis store: %v", err)
