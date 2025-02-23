@@ -65,7 +65,7 @@ func main() {
 
 	// Create Redis store
 	store, err := redis.NewStore(redis.Options{
-		Addresses: []string{redisAddr},
+		RedisURL: redisAddr,
 	})
 	if err != nil {
 		log.Fatalf("Failed to create Redis store: %v", err)

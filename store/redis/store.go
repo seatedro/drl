@@ -17,16 +17,18 @@ type RedisStore struct {
 }
 
 type Options struct {
-	Addresses []string
+	RedisURL  string
 	KeyPrefix string
 }
 
 func NewStore(opts Options) (*RedisStore, error) {
 	var client redis.UniversalClient
 
-	client = redis.NewClient(&redis.Options{
-		Addr: opts.Addresses[0],
-	})
+	opt, err := redis.ParseURL(opts.RedisURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
+	}
+	client = redis.NewClient(opt)
 
 	// Test connection
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
